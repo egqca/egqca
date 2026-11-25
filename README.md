@@ -1,0 +1,109 @@
+# EGQCA
+
+**Extended Generalized Quasichemical Approximation** for (quasi-)binary alloys
+$A_{1-x}B_xC$, with optional vibrational and PV (enthalpy) contributions.
+
+EGQCA computes thermodynamic properties of an alloy at arbitrary composition $x$
+and temperature $T$ by statistically averaging over a set of small clusters.
+From the cluster energies it gives the mixing free energy, enthalpy and entropy,
+the cluster occurrence probabilities, the miscibility gap (binodal and spinodal),
+and composition-averaged properties such as lattice parameters.
+
+The method is described in
+[doi:10.1016/j.mtphys.2024.101547](https://doi.org/10.1016/j.mtphys.2024.101547).
+
+## Features
+
+- Generation of all non-equivalent clusters of a supercell from a CIF file
+  (via the [supercell program](https://orex.github.io/supercell/))
+- Input files for DFT relaxations with FHI-aims, Quantum ESPRESSO or VASP, and
+  automatic extraction of the energies and lattice parameters
+- Relaxation and phonons with machine-learned interatomic potentials (UPET, MACE,
+  MatterSim, GRACE, or any ASE calculator)
+- Gibbs free energy with mixing energy, configurational entropy, vibrational
+  free energy from phonon DOS, and PV term
+- Miscibility gap, averaged properties and cluster reduction
+
+## Installation
+
+```bash
+pip install egqca
+```
+
+The ML relaxation needs the package of the chosen model family. Install each
+into its own environment, as their dependencies can conflict:
+
+```bash
+pip install "egqca[upet]"        # UPET / PET models
+pip install "egqca[mace]"        # MACE
+pip install "egqca[mattersim]"   # MatterSim
+pip install "egqca[grace]"       # GRACE
+```
+
+Python 3.10 or newer is required.
+
+To install the development version from source:
+
+```bash
+git clone https://github.com/egqca/egqca
+cd egqca
+pip install -e .
+```
+
+## Quick start
+
+With existing input files, a calculation looks like this:
+
+```python
+import numpy as np
+import egqca
+
+m = egqca.EGQCA(
+    datafile="clusters.dat",
+    compound="A$_{1-x}$B$_x$C",
+    volume_file="volume.dat",          # optional, for the PV term
+    pressure_GPa=0.0,                  # optional
+    phonon_file_name="ph_dos",         # optional, folder with <cluster_id>.dos files
+)
+
+x_grid = np.arange(1e-6, 1.0, 1.0e-3)
+m.thermodynamic_assessment(x_grid, Tlist=[600, 800, 1000, 1400])
+m.average_properties("volume.dat")
+```
+
+## Example
+
+[`examples/NbV/`](https://github.com/egqca/egqca/tree/main/examples/NbV) covers the full workflow with ML potentials for bcc
+Nb$_{1-x}$V$_x$ with 8-atom clusters:
+
+| Script | Step |
+|---|---|
+| `01_generate_clusters.py` | generate the 22 non-equivalent clusters |
+| `02_ml_relaxation_phonons.py` | ML relaxation and phonons with `pet-omatpes-l` |
+| `03_run_egqca.py` | EGQCA without phonons, with phonons, and with phonons + PV |
+
+The results of step 2 are included, so `03_run_egqca.py` runs directly.
+
+## Documentation
+
+The documentation in [`docs/`](https://github.com/egqca/egqca/tree/main/docs) covers the cluster setup, DFT input files,
+the ML workflow, the entropy approximation, property averaging and cluster
+reduction. Build it locally from a source checkout with
+
+```bash
+pip install -e ".[docs]"
+mkdocs serve
+```
+
+## Citation
+
+If you use EGQCA, please cite
+[doi:10.1016/j.mtphys.2024.101547](https://doi.org/10.1016/j.mtphys.2024.101547).
+
+## License
+
+EGQCA is released under the [MIT License](https://github.com/egqca/egqca/blob/main/LICENSE).
+
+The ML packages and model weights it can use have their own licenses. Some
+model weights (e.g. MACE-OMAT-0, MACE-MATPES-0, MACE-MH) are for
+non-commercial use only. Check the license of the model you use.

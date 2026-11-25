@@ -1,0 +1,51 @@
+site_name: EGQCA
+site_description: Documentation for the EGQCA Python package
+site_dir: site
+
+theme:
+  name: mkdocs
+
+nav:
+  - Home: index.md
+  - Cluster Setup: cluster-setup.md
+  - Entropy Approximation: entropy.md
+  - ML Workflow: ml-workflow.md
+  - Cluster Reduction: cluster-reduction.md
+  - Properties Averaging: properties-averaging.md
+  - API Reference: docstrings.md
+  - DFT Input Files: dft-files.md
+
+docs_dir: docs
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            docstring_section_style: table
+            show_root_heading: true
+            show_root_full_path: false
+            show_source: true
+            show_signature_annotations: true
+            separate_signature: true
+            line_length: 88
+            members_order: source
+            filters: ["!^_"]
+            merge_init_into_class: true
+            show_if_no_docstring: false
+            heading_level: 3
