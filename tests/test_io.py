@@ -413,6 +413,30 @@ def test_read_phonons_normalizes_before_dropping_imaginary_modes(tmp_path: Path)
     assert _modes_per_site(phonon_data) == pytest.approx(1.5, rel=1e-2)
 
 
+def test_read_phonons_ignores_broadening_tails_below_zero(tmp_path: Path, recwarn):
+    # grid from -30 meV with a zero DOS there except a tiny tail, as from a Gaussian-broadened DOS
+    model = _write_phonon_dos(tmp_path, modes_per_site=3.0, sites=4)
+    dos_file = tmp_path / "phonons" / "S0_i0_w1.dos"
+    energies, weights = np.loadtxt(dos_file).T
+    below = np.linspace(-0.03, 0.0, 301)
+    tail = 1e-6 * weights.max() * np.exp(below / 0.002)
+    np.savetxt(dos_file, np.column_stack((np.r_[below, energies], np.r_[tail, weights])), header="Energy(eV) DOS")
+
+    read_phonons(model, "phonons", sites=4)
+
+    assert not [w for w in recwarn if "imaginary" in str(w.message)]
+
+
+def test_read_phonons_reports_lowest_imaginary_frequency(tmp_path: Path):
+    # Gaussian at -10 meV (width 5 meV): reported where the DOS falls below 1e-3 of its maximum
+    model = _write_phonon_dos(tmp_path, modes_per_site=3.0, sites=4, shift_eV=-0.04)
+
+    with pytest.warns(UserWarning, match=r"down to -2\d\.\d meV") as record:
+        read_phonons(model, "phonons", sites=4)
+
+    assert "S0_i0_w1" in str(record[0].message)
+
+
 @pytest.mark.parametrize(
     "header, eV_to_unit",
     [("Energy(meV) DOS", 1.0e3), ("Frequency(THz) DOS", 241.79892), ("Frequency(GHz) DOS", 241798.92)],

@@ -1,5 +1,6 @@
 site_name: EGQCA
 site_description: Documentation for the EGQCA Python package
+site_url: https://egqca.github.io/egqca/
 site_dir: site
 
 theme:

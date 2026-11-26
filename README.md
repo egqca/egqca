@@ -10,7 +10,8 @@ the cluster occurrence probabilities, the miscibility gap (binodal and spinodal)
 and composition-averaged properties such as lattice parameters.
 
 The method is described in
-[doi:10.1016/j.mtphys.2024.101547](https://doi.org/10.1016/j.mtphys.2024.101547).
+[doi:10.1016/j.mtphys.2024.101547](https://doi.org/10.1016/j.mtphys.2024.101547),
+the code in [arXiv:2611.34551](https://doi.org/10.48550/arXiv.2611.34551).
 
 ## Features
 
@@ -86,24 +87,18 @@ The results of step 2 are included, so `03_run_egqca.py` runs directly.
 
 ## Documentation
 
-The documentation in [`docs/`](https://github.com/egqca/egqca/tree/main/docs) covers the cluster setup, DFT input files,
-the ML workflow, the entropy approximation, property averaging and cluster
-reduction. Build it locally from a source checkout with
-
-```bash
-pip install -e ".[docs]"
-mkdocs serve
-```
+The full documentation is available at [egqca.github.io/egqca](https://egqca.github.io/egqca/).
 
 ## Citation
 
 If you use EGQCA, please cite
-[doi:10.1016/j.mtphys.2024.101547](https://doi.org/10.1016/j.mtphys.2024.101547).
+
+- D. Spath *et al.*, EGQCA Code: automated high-throughput thermodynamic
+  modeling of solid solutions,
+  [arXiv:2611.34551](https://doi.org/10.48550/arXiv.2611.34551) (2026)
+- [doi:10.1016/j.mtphys.2024.101547](https://doi.org/10.1016/j.mtphys.2024.101547)
 
 ## License
 
 EGQCA is released under the [MIT License](https://github.com/egqca/egqca/blob/main/LICENSE).
 
-The ML packages and model weights it can use have their own licenses. Some
-model weights (e.g. MACE-OMAT-0, MACE-MATPES-0, MACE-MH) are for
-non-commercial use only. Check the license of the model you use.

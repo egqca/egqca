@@ -354,6 +354,9 @@ def read_volume_dat(self, volume_file: str | Path, dft_out_file:str, dft_out_fil
 
 # Relative deviation from 3 modes per site above which read_phonons warns.
 PHONON_NORM_TOLERANCE = 0.05
+# DOS values at omega <= 0 below this fraction of the DOS maximum count as broadening tails,
+# not as imaginary modes, in the read_phonons warning.
+PHONON_IMAGINARY_TOLERANCE = 1e-3
 
 
 def read_phonons(self, phonon_file_name:str, sites: int):
@@ -378,7 +381,8 @@ def read_phonons(self, phonon_file_name:str, sites: int):
         Total number of sites of a cluster. Each DOS is rescaled to 3 modes per
         site, including imaginary modes, before those are dropped; a warning
         lists the files whose normalization was off by more than
-        ``PHONON_NORM_TOLERANCE``.
+        ``PHONON_NORM_TOLERANCE``. Clusters whose DOS at omega <= 0 exceeds
+        ``PHONON_IMAGINARY_TOLERANCE`` times its maximum are listed in a warning.
 
     Returns
     -------
@@ -394,7 +398,8 @@ def read_phonons(self, phonon_file_name:str, sites: int):
     folder_mode = phonon_folder.is_dir()
 
     phonon_data = []
-    # clusters with imaginary (negative) frequencies: (id, dropped modes/site, min hbar*omega in meV)
+    # clusters with imaginary (negative) frequencies: (id, dropped modes/site, lowest hbar*omega
+    # in meV with a DOS above PHONON_IMAGINARY_TOLERANCE of the maximum)
     imaginary_modes = []
     # clusters whose DOS was not normalized to 3 modes per site: (id, modes per site in the file)
     misnormalized = []
@@ -455,9 +460,11 @@ def read_phonons(self, phonon_file_name:str, sites: int):
                 # imaginary modes are dropped here, so the vibrational free energy of this
                 # cluster misses them; record how much weight that is
                 dropped_modes = float(np.trapezoid(wg[~mask_pos, 1], wg[~mask_pos, 0]))
-                if dropped_modes > 0.0:
+                # broadening tails of the modes near omega = 0 are not imaginary modes
+                significant = wg[~mask_pos, 1] > PHONON_IMAGINARY_TOLERANCE * wg[:, 1].max()
+                if dropped_modes > 0.0 and np.any(significant):
                     imaginary_modes.append(
-                        (cluster_id, dropped_modes, hbar * float(wg[:, 0].min()))
+                        (cluster_id, dropped_modes, hbar * float(wg[~mask_pos, 0][significant].min()))
                     )
             wg = wg[mask_pos,:]
 
@@ -474,12 +481,16 @@ def read_phonons(self, phonon_file_name:str, sites: int):
         )
 
     if imaginary_modes:
-        worst = min(imaginary_modes, key=lambda entry: entry[2])
+        shown = ", ".join(
+            f"{cluster_id} ({dropped:.3g}, down to {omega_min:.1f} meV)"
+            for cluster_id, dropped, omega_min in sorted(imaginary_modes, key=lambda entry: -entry[1])[:10]
+        )
+        if len(imaginary_modes) > 10:
+            shown += f", ... ({len(imaginary_modes)} in total)"
         warnings.warn(
             f"{len(imaginary_modes)} of {len(phonon_data)} phonon DOS files contain imaginary "
             "(negative) frequencies, which are excluded from the vibrational free energy. "
-            f"Most negative mode: {worst[2]:.2f} meV in {worst[0]}; "
-            f"largest excluded weight: {max(e[1] for e in imaginary_modes):.4f} of 3 modes per site. "
+            f"Excluded modes per site (of 3) and lowest frequency with DOS: {shown}. "
             "Check the dynamic stability of these clusters."
         )
 

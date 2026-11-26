@@ -2,8 +2,10 @@
 **Extended Generalized Quasichemical Approximation**
 for (quasi-)binary alloys with optional vibrational and PV (enthalpy) contributions.
 
-Implementation based on:
-https://doi.org/10.1016/j.mtphys.2024.101547
+If you use EGQCA, please cite both the method paper and the code paper:
+
+- Method: [doi:10.1016/j.mtphys.2024.101547](https://doi.org/10.1016/j.mtphys.2024.101547)
+- Code: [arXiv:2611.34551](https://doi.org/10.48550/arXiv.2611.34551)
 
 ## Overview
 
